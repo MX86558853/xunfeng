@@ -11,11 +11,15 @@
 
 漏洞检测引擎会根据用户指定的**任务规则**进行定期或者一次性的漏洞检测，其支持2种插件类型、标示符与脚本，均可通过web控制台进行添加。
 
+如果你不是从公众号看过来的，可以[看下](http://mp.weixin.qq.com/s/sFDY8vzonIW2gAcw0CCkzQ)，说了一些部署的注意点。
+
 ## 安装指南 ##
 
 **基础环境需求：**  
 
-[![Python 2.7](https://img.shields.io/badge/python-2.7-yellow.svg)](https://www.python.org/) [![MyGet](https://sec-pic-ly.b0.upaiyun.com/xunfeng/static/MongoVersion.svg)](https://www.mongodb.com/download-center?jmp=nav)  
+[![Python 2.7](https://img.shields.io/badge/python-2.7-yellow.svg)](https://www.python.org/) [![MyGet](https://sec-pic-ly.b0.upaiyun.com/xunfeng/static/MongoVersion.svg?a=1)](https://www.mongodb.com/download-center?jmp=nav)  
+因为Github较慢，我们提供了一个国内的镜像源 https://code.aliyun.com/ysrc/xunfeng.git
+
 运行与安装过程需要在管理员权限下进行
 
 	# 官网国内下载较慢，我们提供了镜像地址，根据自己的系统下载对应的
@@ -25,7 +29,7 @@
 	https://sec.ly.com/mirror/mongodb-linux-x86_64-ubuntu1604-3.4.0.tgz
 	https://sec.ly.com/mirror/mongodb-linux-x86_64-ubuntu1404-3.4.0.tgz
 	https://sec.ly.com/mirror/mongodb-win32-x86_64-2008plus-ssl-3.4.0-signed.msi
-
+	https://sec.ly.com/mirror/mongodb-osx-ssl-x86_64-3.4.1.tgz
 **安装相关依赖：**
 
 	# CentOS
@@ -55,7 +59,7 @@
 
 	./mongorestore -h 127.0.0.1 --port 65521 -d xunfeng db
 	# db为初始数据库结构文件夹路径
-	# 低版本不支持全文索引，需使用MongoDB 3.x版本
+	# 低版本不支持全文索引，需使用高于 MongoDB 3.2版本
 **增加认证：**  
 
 	./mongo --port 65521
@@ -85,7 +89,7 @@
 
 	mongorestore.exe -h 127.0.0.1 --port 65521 -d xunfeng db
 	# db为初始数据库结构文件夹路径
-	# 低版本不支持全文索引，需使用MongoDB 3.x版本
+	# 低版本不支持全文索引，需使用高于 MongoDB 3.2版本
 **增加认证：**  
 
 	./mongo --port 65521
@@ -99,22 +103,27 @@
 **启动服务：**  
 
 	# 根据实际情况修改Conifg.py和Run.bat文件。
-	运行Run.bat 启动服务。
-
+	运行Run.bat 启动服务。要用MASSCAN的话需要安装WinPcap
+	
 ## Docker 布署 ##
 
-#### 使用 Dockerfile 布署####
-Dockerfile 源文件请前往[这里](https://github.com/Medicean/VulApps/tree/master/tools/xunfeng)查看
+### 使用 Dockerfile 布署 ###
 
-#### 直接获取 Docker hub 镜像 (推荐)####
+	# 在 xunfeng 目录下，执行：
+	$ docker build --tag=xunfeng .
 
-	拉取镜像到本地
-	$ docker pull medicean/vulapps:tools_xunfeng
+### 直接获取 Docker hub 镜像 (推荐)###
+
+	# 拉取镜像到本地
+	$ docker pull ysrc/xunfeng
+
 > 如果获取速度慢，推荐使用 [中科大 Docker Mirrors](https://lug.ustc.edu.cn/wiki/mirrors/help/docker)加速
 
-	启动环境
-	$ docker run -d -p 8000:80 medicean/vulapps:tools_xunfeng
+	# 启动环境
+	$ docker run -d -p 8000:80 -v /opt/data:/data ysrc/xunfeng:latest
  > `-p 8000:80` 前面的 8000 代表物理机的端口，可随意指定。 
+ >
+ > `-v /opt/data:/data` 把物理机的 `/opt/data` 挂载到 Docker 的 `/data` 指定此参数后，mongodb的数据会保存到物理机的 `/opt/data` 目录下
  
 	访问: `http://127.0.0.1:8000/` 正常访问则代表安装成功
 
@@ -127,6 +136,8 @@ mongodb | scan | scanlol66
 巡风物理路径 | /opt/xunfeng | -
 MASSCAN 路径| /opt/xunfeng/masscan/linux_64/masscan | -
 mongodb 端口 | 65521| -
+
+	# 记得修改默认密码，感谢热心网友 Medicean 提供的帮助 :)
 
 ## 配置指南 ##
 - 在配置-爬虫引擎-网络资产探测列表 设置内网IP段**（必须配置，否则无法正常使用）**。
@@ -176,8 +187,8 @@ mongodb 端口 | 65521| -
 此外系统内嵌了辅助验证功能:  
 
 
-> DNS：触发，nslookup randomstr IP，验证， http://ip/randomstr ，返回YES即存在。  
-HTTP：触发，http://ip/add/randomstr ，验证， http://ip/check/randomstr ，返回YES即存在。  
+> DNS：触发，nslookup randomstr IP，验证， http://ip:8088/randomstr ，返回YES即存在。  
+HTTP：触发，http://ip:8088/add/randomstr ，验证， http://ip:8088/check/randomstr ，返回YES即存在。  
 
 使用例子:
 
